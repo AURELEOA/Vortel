@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Vortel.io | Multiplayer Sandbox</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    
+    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-0000000000000000" crossorigin="anonymous"></script>
+
+    <style>
+        :root { --accent: #00ff88; --bg: #0a0a0a; --panel: #151515; }
+        body, html { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; background: var(--bg); font-family: 'Segoe UI', sans-serif; color: white; }
+        
+        /* BLOXD-STYLE INTERFACE */
+        #ui-wrapper { position: absolute; inset: 0; z-index: 100; display: flex; flex-direction: column; background: rgba(0,0,0,0.85); transition: 0.3s; }
+        #top-bar { display: flex; justify-content: space-between; padding: 25px; align-items: center; }
+        #logo { font-size: 45px; font-weight: 900; color: var(--accent); letter-spacing: 6px; text-shadow: 0 0 15px rgba(0,255,136,0.4); }
+        
+        #main-content { display: flex; flex: 1; justify-content: center; align-items: center; gap: 30px; padding: 20px; }
+        
+        .side-panel { background: var(--panel); padding: 20px; border-radius: 12px; border: 1px solid #333; width: 280px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
+        h3 { margin-top: 0; border-bottom: 1px solid #333; padding-bottom: 10px; color: var(--accent); font-size: 16px; text-transform: uppercase; }
+
+        .mode-card { background: #222; padding: 12px; margin: 8px 0; border-radius: 6px; cursor: pointer; border-left: 4px solid transparent; transition: 0.2s; }
+        .mode-card:hover { background: #282828; border-left-color: var(--accent); }
+        .mode-card.active { background: #333; border-left-color: var(--accent); font-weight: bold; }
+
+        .play-section { text-align: center; width: 380px; }
+        input, select { width: 100%; padding: 14px; margin: 8px 0; background: #000; border: 1px solid #444; color: white; border-radius: 6px; box-sizing: border-box; font-size: 16px; outline: none; }
+        
+        .btn-play { width: 100%; padding: 18px; background: var(--accent); color: black; border: none; border-radius: 6px; font-size: 24px; font-weight: 900; cursor: pointer; margin-top: 15px; }
+        .btn-play:hover { transform: scale(1.03); }
+        
+        .setting-row { margin: 15px 0; font-size: 14px; color: #bbb; text-align: left; }
+        input[type=range] { padding: 0; cursor: pointer; width: 100%; }
+
+        #game-frame { width: 100%; height: 100%; border: none; display: none; }
+    </style>
+</head>
+<body>
+
+    <div id="ui-wrapper">
+        <div id="top-bar">
+            <div id="logo">VORTEL</div>
+            <div style="color: #888;">Account: <span id="display-name" style="color:white;">Guest</span></div>
+        </div>
+
+        <div id="main-content">
+            <div class="side-panel">
+                <h3>MODES</h3>
+                <div class="mode-card active" onclick="setMode('survival', this)"><b>Survival</b></div>
+                <div class="mode-card" onclick="setMode('creative', this)"><b>Creative</b></div>
+                <div class="mode-card" onclick="setMode('parkour', this)"><b>Parkour</b></div>
+            </div>
+
+            <div class="play-section">
+                <input type="text" id="username" placeholder="Username...">
+                <input type="text" id="lobby" placeholder="Lobby Name (e.g. MyWorld)">
+                <button class="btn-play" onclick="playGame()">PLAY NOW</button>
+                <div style="margin-top: 25px; height: 100px; border: 1px dashed #444; display: flex; align-items: center; justify-content: center; color: #555;">
+                    [ AD SPACE ]
+                </div>
+            </div>
+
+            <div class="side-panel">
+                <h3>SETTINGS</h3>
+                <div class="setting-row">
+                    FOV: <span id="fov-val">85</span>
+                    <input type="range" id="fov" min="60" max="110" value="85" oninput="updateVal('fov')">
+                </div>
+                <div class="setting-row">
+                    SENS: <span id="sens-val">5</span>
+                    <input type="range" id="sens" min="1" max="10" value="5" oninput="updateVal('sens')">
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <iframe id="game-frame" src="" allow="fullscreen; pointer-lock"></iframe>
+
+    <script>
+        let currentMode = 'survival';
+
+        window.onload = () => {
+            if(localStorage.getItem('v_user')) {
+                document.getElementById('username').value = localStorage.getItem('v_user');
+                document.getElementById('display-name').innerText = localStorage.getItem('v_user');
+            }
+        };
+
+        function updateVal(id) {
+            document.getElementById(id + '-val').innerText = document.getElementById(id).value;
+        }
+
+        function setMode(mode, el) {
+            currentMode = mode;
+            document.querySelectorAll('.mode-card').forEach(c => c.classList.remove('active'));
+            el.classList.add('active');
+        }
+
+        function playGame() {
+            const user = document.getElementById('username').value || "Guest" + Math.floor(Math.random()*900);
+            const lobby = document.getElementById('lobby').value || "Global";
+            
+            localStorage.setItem('v_user', user);
+
+            const root = document.documentElement;
+            if (root.requestFullscreen) root.requestFullscreen();
+            else if (root.webkitRequestFullscreen) root.webkitRequestFullscreen();
+
+            const engineUrl = `https://andyhall.github.io/noa-examples/?mode=${currentMode}&room=${lobby}&user=${user}&fov=${document.getElementById('fov').value}`;
+            
+            document.getElementById('ui-wrapper').style.display = 'none';
+            const frame = document.getElementById('game-frame');
+            frame.src = engineUrl;
+            frame.style.display = 'block';
+            frame.focus();
+        }
+    </script>
+</body>
+</html>
